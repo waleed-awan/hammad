@@ -3,6 +3,7 @@ import Testimonials from "@/components/testimonial";
 import HeroSection from "@/components/hero";
 import ServicesSection from "@/components/services";
 import BookingForm from "@/components/form";
+import ExpandableGallery from "@/components/howitwork";
 
 export default function Home() {
   return (
@@ -10,6 +11,7 @@ export default function Home() {
       <HeroSection />
       <BookingForm/>
       <ServicesSection />
+      <ExpandableGallery/>
       <Testimonials/>
       <Footer/>
     </div>
