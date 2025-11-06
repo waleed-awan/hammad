@@ -1,6 +1,6 @@
 // components/Testimonials.tsx
 "use client";
-import React from "react";
+import React, { useState, useRef } from "react";
 import Image from "next/image";
 
 export default function Testimonials() {
@@ -25,49 +25,103 @@ export default function Testimonials() {
     },
   ];
 
-  const [index, setIndex] = React.useState(0);
+  const [index, setIndex] = useState(0);
+  const [offset, setOffset] = useState(0);
+  const [transition, setTransition] = useState(true);
 
-  React.useEffect(() => {
-    const timer = setInterval(() => {
-      setIndex((prev) => (prev + 1) % testimonials.length);
-    }, 4500);
+  const startX = useRef<number | null>(null);
+  const isDragging = useRef(false);
 
-    return () => clearInterval(timer);
-  }, [testimonials.length]);
+  const handleNext = () => {
+    setTransition(true);
+    setIndex((prev) => (prev + 1) % testimonials.length);
+  };
 
-  const current = testimonials[index];
+  const handlePrev = () => {
+    setTransition(true);
+    setIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
+  };
+
+  // --- Touch swipe logic ---
+  const handleTouchStart = (e: React.TouchEvent) => {
+    startX.current = e.touches[0].clientX;
+    isDragging.current = true;
+    setTransition(false);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging.current || startX.current === null) return;
+    const currentX = e.touches[0].clientX;
+    const distance = currentX - startX.current;
+    setOffset(distance);
+  };
+
+  const handleTouchEnd = () => {
+    if (!isDragging.current) return;
+    setTransition(true);
+
+    if (offset < -80) handleNext();
+    else if (offset > 80) handlePrev();
+
+    setOffset(0);
+    isDragging.current = false;
+    startX.current = null;
+  };
 
   return (
     <section className="relative bg-gradient-to-b from-teal-900 to-teal-950 py-16 md:py-24 flex justify-center items-center overflow-hidden px-4">
-      {/* Outer frame */}
-
       <div className="relative w-full max-w-6xl mx-auto bg-[#00464D]/85 rounded-2xl shadow-2xl p-6 md:p-12 backdrop-blur-lg overflow-hidden">
-        {/* Background Image */}
+        {/* Background */}
         <div className="absolute inset-0 w-full h-full -z-10 overflow-hidden rounded-2xl opacity-40">
-          <Image src="/testi.png" alt="Limo Service Background" fill className="object-cover scale-105" />
+          <Image
+            src="/testi.png"
+            alt="Limo Service Background"
+            fill
+            className="object-cover scale-105"
+          />
         </div>
 
         {/* Section Header */}
         <div className="text-center text-white mb-8">
-          <p className="tracking-[0.3em] text-xs md:text-sm uppercase font-medium">TESTIMONIALS</p>
-          <h2 className="text-2xl md:text-4xl font-bold mt-2 text-[#F6CD46]">What Our Clients Say</h2>
+          <p className="tracking-[0.3em] text-xs md:text-sm uppercase font-medium">
+            TESTIMONIALS
+          </p>
+          <h2 className="text-2xl md:text-4xl font-bold mt-2 text-[#F6CD46]">
+            What Our Clients Say
+          </h2>
           <div className="w-20 h-[3px] bg-[#F6CD46] mx-auto mt-2"></div>
         </div>
 
-        {/* Slider Wrapper */}
-        <div className="relative min-h-[220px] md:min-h-[250px] flex justify-center items-center text-center px-2">
+        {/* Swipe Container */}
+        <div
+          className="relative w-full overflow-hidden select-none"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
           <div
-            key={index}
-            className="w-full max-w-3xl mx-auto flex flex-col justify-center items-center transition-all duration-700 ease-[cubic-bezier(0.55,0.03,0.26,0.97)] opacity-100 translate-y-0"
+            className={`flex transition-transform ${
+              transition ? "duration-500 ease-[cubic-bezier(0.55,0.03,0.26,0.97)]" : ""
+            }`}
+            style={{
+              transform: `translateX(calc(-${index * 100}% + ${offset}px))`,
+            }}
           >
-            <p className="text-base md:text-xl font-light leading-relaxed italic text-white">
-              {current.text}
-            </p>
-            <span className="text-3xl md:text-4xl mt-4 block text-[#F6CD46]">“”</span>
-            <div className="mt-2">
-              <p className="font-semibold text-lg md:text-xl text-white">{current.name}</p>
-              <p className="text-xs md:text-sm opacity-80 text-gray-200">{current.date}</p>
-            </div>
+            {testimonials.map((item, i) => (
+              <div
+                key={i}
+                className="min-w-full flex flex-col justify-center items-center px-4 text-center"
+              >
+                <p className="text-base md:text-xl font-light leading-relaxed italic text-white">
+                  {item.text}
+                </p>
+                <span className="text-3xl md:text-4xl mt-4 block text-[#F6CD46]">“”</span>
+                <div className="mt-2">
+                  <p className="font-semibold text-lg md:text-xl text-white">{item.name}</p>
+                  <p className="text-xs md:text-sm opacity-80 text-gray-200">{item.date}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -77,7 +131,9 @@ export default function Testimonials() {
             <span
               key={i}
               onClick={() => setIndex(i)}
-              className={`cursor-pointer w-2.5 h-2.5 md:w-3 md:h-3 rounded-full border border-[#F6CD46] transition-all ${i === index ? 'bg-[#F6CD46] scale-110' : ''}`}
+              className={`cursor-pointer w-2.5 h-2.5 md:w-3 md:h-3 rounded-full border border-[#F6CD46] transition-all ${
+                i === index ? "bg-[#F6CD46] scale-110" : ""
+              }`}
             ></span>
           ))}
         </div>
