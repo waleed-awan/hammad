@@ -219,7 +219,7 @@ export default function ExpandableGallery() {
             return (
               <div
                 key={item.id}
-                className="relative group cursor-pointer flex-1 rounded-2xl overflow-hidden transition-all duration-500 ease-out"
+                className="relative group cursor-pointer flex-1 rounded-4xl overflow-hidden transition-all duration-500 ease-out"
                 onMouseEnter={() => setHoveredId(item.id)}
                 onMouseLeave={() => setHoveredId(null)}
                 style={{
